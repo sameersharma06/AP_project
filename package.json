@@ -9,7 +9,8 @@
   "scripts": {
     "test": "node --test",
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "db:check": "node src/test-db.js"
   },
   "repository": {
     "type": "git",
