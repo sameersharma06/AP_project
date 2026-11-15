@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+}
+
+enum ReportStatus {
+  ACTIVE
+  RESOLVED
+  REJECTED
+  EXPIRED
+}
+
+enum ModerationActionType {
+  APPROVED
+  REJECTED
+  RESOLVED
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  email              String             @unique
+  passwordHash       String
+  role               UserRole           @default(USER)
+  createdAt          DateTime           @default(now())
+
+  reports            HazardReport[]
+  votes              HazardVote[]
+  moderationActions  ModerationAction[] @relation("ModeratorActions")
+}
+
+model HazardReport {
+  id             Int                @id @default(autoincrement())
+  userId         Int
+  hazardType     String
+  description    String?
+  latitude       Float
+  longitude      Float
+  status         ReportStatus       @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  expiresAt      DateTime
+
+  user           User               @relation(fields: [userId], references: [id])
+  votes          HazardVote[]
+  moderationActions ModerationAction[]
+}
+
+model HazardVote {
+  userId     Int
+  reportId   Int
+  createdAt  DateTime      @default(now())
+
+  user       User          @relation(fields: [userId], references: [id])
+  report     HazardReport  @relation(fields: [reportId], references: [id])
+
+  @@id([userId, reportId])
+}
+
+model ModerationAction {
+  id           Int                   @id @default(autoincrement())
+  moderatorId  Int
+  reportId     Int
+  action       ModerationActionType
+  reason       String?
+  createdAt    DateTime              @default(now())
+
+  moderator    User                  @relation("ModeratorActions", fields: [moderatorId], references: [id])
+  report       HazardReport          @relation(fields: [reportId], references: [id])
+}
